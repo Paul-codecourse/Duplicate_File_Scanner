@@ -2,7 +2,7 @@ const fs = require('fs').promises;
 const { existsSync, createReadStream } = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const os = require('os'); // Added for hostname
+const os = require('os');
 
 const SCAN_PATH = process.argv[2];
 const EXTENSIONS_INPUT = process.argv[3]; 
@@ -13,10 +13,9 @@ if (!SCAN_PATH) {
     process.exit(1);
 }
 
-// --- NEW: DYNAMIC FILENAME GENERATION ---
+// Dynamic Filename Generation
 const hostname = os.hostname();
 const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-// Sanitize the scan path to use in a filename (remove drive letters and slashes)
 const pathSlug = path.resolve(SCAN_PATH).replace(/[^a-z0-9]/gi, '_').slice(-30); 
 
 const OUTPUT_FILE = `duplicates_${hostname}_${timestamp}_${pathSlug}.csv`;
@@ -39,6 +38,9 @@ function getFileHash(filePath, bytesToRead = null) {
     });
 }
 
+// Counters for the Scan Phase
+let filesFoundCount = 0;
+
 async function walk(dir, fileList = [], skippedItems = []) {
     try {
         const files = await fs.readdir(dir);
@@ -51,6 +53,10 @@ async function walk(dir, fileList = [], skippedItems = []) {
                 } else {
                     const ext = path.extname(file).toLowerCase();
                     if (ALLOWED_EXTENSIONS && !ALLOWED_EXTENSIONS.has(ext)) continue;
+
+                    filesFoundCount++;
+                    // Update the terminal line without creating a new one
+                    process.stdout.write(`\r📂 Scanning... Found ${filesFoundCount} files`);
 
                     fileList.push({
                         name: file,
@@ -70,36 +76,59 @@ async function walk(dir, fileList = [], skippedItems = []) {
 }
 
 async function findDuplicates() {
-    console.log(`🚀 Scanning: ${path.resolve(SCAN_PATH)}`);
-    console.log(`🖥️  Host: ${hostname}`);
+    console.log(`🚀 Starting Scan on ${hostname} at ${path.resolve(SCAN_PATH)}`);
     
     const { fileList, skippedItems } = await walk(SCAN_PATH);
-    
+    process.stdout.write('\n'); // Move to next line after scan completes
+
+    // --- STEP 1: Filter by Size ---
     const sizeMap = new Map();
     fileList.forEach(f => {
         if (!sizeMap.has(f.size)) sizeMap.set(f.size, []);
         sizeMap.get(f.size).push(f);
     });
 
-    const partialHashMap = new Map();
-    for (const [size, files] of sizeMap) {
-        if (files.length < 2) continue;
-        for (const file of files) {
-            try {
-                const pHash = await getFileHash(file.path, PARTIAL_SIZE);
-                const key = `${size}-${pHash}`;
-                if (!partialHashMap.has(key)) partialHashMap.set(key, []);
-                partialHashMap.get(key).push(file);
-            } catch (e) {
-                skippedItems.push(`HASHING FAILED (Partial): ${file.path}`);
-            }
-        }
+    const potentialMatches = Array.from(sizeMap.values()).filter(group => group.length > 1).flat();
+    
+    if (potentialMatches.length === 0) {
+        console.log("✨ No potential duplicates based on file size.");
+        return;
     }
 
+    // --- STEP 2: Partial Hashing ---
+    console.log(`🔍 Checking ${potentialMatches.length} candidates via Partial Hash...`);
+    const partialHashMap = new Map();
+    let pCount = 0;
+
+    for (const file of potentialMatches) {
+        pCount++;
+        const percent = Math.floor((pCount / potentialMatches.length) * 100);
+        process.stdout.write(`\r   Progress: ${percent}% (${pCount}/${potentialMatches.length})`);
+        
+        try {
+            const pHash = await getFileHash(file.path, PARTIAL_SIZE);
+            const key = `${file.size}-${pHash}`;
+            if (!partialHashMap.has(key)) partialHashMap.set(key, []);
+            partialHashMap.get(key).push(file);
+        } catch (e) {
+            skippedItems.push(`HASHING FAILED (Partial): ${file.path}`);
+        }
+    }
+    process.stdout.write('\n');
+
+    // --- STEP 3: Full Hashing ---
+    const finalCandidates = Array.from(partialHashMap.values()).filter(group => group.length > 1).flat();
+    
     const finalDuplicates = new Map();
-    for (const [key, files] of partialHashMap) {
-        if (files.length < 2) continue;
-        for (const file of files) {
+    if (finalCandidates.length > 0) {
+        console.log(`🧪 Verifying ${finalCandidates.length} identical candidates via Full Hash...`);
+        let fCount = 0;
+
+        for (const file of finalCandidates) {
+            fCount++;
+            const percent = Math.floor((fCount / finalCandidates.length) * 100);
+            process.stdout.write(`\r   Progress: ${percent}% (${fCount}/${finalCandidates.length})`);
+
             try {
                 const fullHash = await getFileHash(file.path);
                 if (!finalDuplicates.has(fullHash)) finalDuplicates.set(fullHash, []);
@@ -108,8 +137,10 @@ async function findDuplicates() {
                 skippedItems.push(`HASHING FAILED (Full): ${file.path}`);
             }
         }
+        process.stdout.write('\n');
     }
 
+    // --- Output Generation ---
     let csvContent = "Filename,Date Created,Size (Bytes),Folder,Full Path\n";
     let sets = 0;
     for (const [hash, files] of finalDuplicates) {
@@ -124,14 +155,14 @@ async function findDuplicates() {
 
     if (sets > 0) {
         await fs.writeFile(OUTPUT_FILE, csvContent);
-        console.log(`✅ Duplicate report: ${OUTPUT_FILE}`);
+        console.log(`✅ Success: ${sets} duplicate sets found. Report: ${OUTPUT_FILE}`);
     } else {
-        console.log("✨ No duplicates found.");
+        console.log("✨ Final verification complete: No bit-for-bit duplicates found.");
     }
 
     if (skippedItems.length > 0) {
         await fs.writeFile(ERRORS_FILE, skippedItems.join('\n'));
-        console.log(`⚠️  Skipped items log: ${ERRORS_FILE}`);
+        console.log(`⚠️  ${skippedItems.length} items were skipped. Log: ${ERRORS_FILE}`);
     }
 }
 
