@@ -28,6 +28,17 @@
             <div class="col-md-3"><div class="card stat-card p-3"><h6>Scan Time</h6><h4 id="stat-time">-</h4></div></div>
         </div>
 
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="input-group">
+                    <span class="input-group-text bg-white">🔍</span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search by filename or path (e.g., .jpg, /Backups/)...">
+                    <button class="btn btn-outline-secondary" type="button" id="clearSearch">Clear</button>
+                </div>
+                <div id="searchStats" class="form-text mt-1 text-muted"></div>
+            </div>
+        </div>
+
         <ul class="nav nav-tabs mb-3" id="auditTabs">
             <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-dupes">Duplicates</button></li>
             <li class="nav-item"><button class="nav-link text-danger" data-bs-toggle="tab" data-bs-target="#tab-errors">Skipped Items</button></li>
@@ -93,6 +104,36 @@
         errorContainer.innerHTML = data.errors.map(err => `
             <tr><td class="small text-break">${err.path}</td><td><span class="badge bg-danger">${err.reason}</span></td></tr>
         `).join('');
+
+        // Search Functionality
+        const searchInput = document.getElementById('searchInput');
+        const clearSearch = document.getElementById('clearSearch');
+        const searchStats = document.getElementById('searchStats');
+
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            const cards = document.querySelectorAll('#dupe-list .card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                // We look at the header (filename) and the body (all paths)
+                const text = card.innerText.toLowerCase();
+                if (text.includes(query)) {
+                    card.style.display = "";
+                    visibleCount++;
+                } else {
+                    card.style.display = "none";
+                }
+            });
+
+            searchStats.innerText = query ? `Showing ${visibleCount} matching sets` : "";
+        });
+
+        clearSearch.addEventListener('click', () => {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+        });
+
     }
 </script>
 </body>
