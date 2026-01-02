@@ -5,20 +5,41 @@
     <title>File Audit Dashboard</title>
     <link rel="stylesheet" href="assets/bootstrap.min.css">
     <style>
-        body { background-color: #f8f9fa; }
+        body { background-color: #f8f9fa; padding-top: 110px;}
         .stat-card { border-radius: 10px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .file-list { font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; background: #eee; padding: 10px; border-radius: 5px; }
         .set-header { cursor: pointer; transition: background 0.2s; }
         .set-header:hover { background-color: #f1f1f1 !important; }
+        .file-check:checked + .file-list {
+            background-color: #d1e7dd; /* light green */
+            border-color: #0f5132;}
+        .sticky-top { backdrop-filter: blur(6px); background-color: rgba(248, 249, 250, 0.95);}
     </style>
 </head>
 <body>
 
+<div class="sticky-top bg-light border-bottom" style="z-index:1030;">
+    <div class="container py-3">
+        <header class="d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">System File Audit</h1>
+            <input type="file" id="fileInput" class="form-control w-auto" accept=".json">
+        </header>
+
+        <ul class="nav nav-tabs mt-3" id="auditTabs">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-dupes">
+                    Duplicates
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link text-danger" data-bs-toggle="tab" data-bs-target="#tab-errors">
+                    Skipped Items
+                </button>
+            </li>
+        </ul>
+    </div>
+</div>
 <div class="container py-4">
-    <header class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">System File Audit</h1>
-        <input type="file" id="fileInput" class="form-control w-auto" accept=".json">
-    </header>
 
     <div id="content" style="display:none;">
         <div class="row g-3 mb-4">
@@ -28,19 +49,21 @@
             <div class="col-md-3"><div class="card stat-card p-3"><h6>Scan Time</h6><h4 id="stat-time">-</h4></div></div>
         </div>
 
-        <div id="actionBar" class="sticky-top bg-white border-bottom py-2 mb-3" style="display:none; z-index: 1020;">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <span id="selectedCount" class="badge bg-primary me-2">0</span> 
-                    <span class="text-muted">files selected</span>
-                </div>
-                <div>
-                    <button class="btn btn-sm btn-outline-danger me-2" onclick="deselectAll()">Deselect All</button>
-                    <button class="btn btn-primary" onclick="copySelectedPaths()">📋 Copy Selected Paths</button>
-                </div>
+    <div id="actionBar" class="sticky-top bg-white border-bottom py-2 mb-3" style="display:none; z-index: 1020;">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div>
+                <span id="selectedCount" class="badge bg-primary me-2">0</span> 
+                <span class="text-muted">files selected</span>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-outline-primary me-2" onclick="smartSelect()" title="Keeps the oldest file in every set and selects the rest">
+                    🪄 Smart Select (Keep Oldest)
+                </button>
+                <button class="btn btn-sm btn-outline-danger me-2" onclick="deselectAll()">Deselect All</button>
+                <button class="btn btn-primary" onclick="copySelectedPaths()">📋 Copy Selected Paths</button>
             </div>
         </div>
-
+    </div>
 
         <div class="row mb-3">
             <div class="col-md-12">
@@ -52,11 +75,6 @@
                 <div id="searchStats" class="form-text mt-1 text-muted"></div>
             </div>
         </div>
-
-        <ul class="nav nav-tabs mb-3" id="auditTabs">
-            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-dupes">Duplicates</button></li>
-            <li class="nav-item"><button class="nav-link text-danger" data-bs-toggle="tab" data-bs-target="#tab-errors">Skipped Items</button></li>
-        </ul>
 
         <div class="tab-content">
             <div class="tab-pane fade show active" id="tab-dupes">
@@ -111,7 +129,11 @@
                     <div class="card-body bg-light">
                         ${set.files.map((f, fileIdx) => `
                             <div class="d-flex align-items-center mb-1">
-                                <input type="checkbox" class="file-check form-check-input me-2" value="${f.path}" onchange="updateSelectionCount()">
+                                <input type="checkbox"
+                                class="file-check form-check-input me-2"
+                                value="${f.path}"
+                                data-date="${f.modified}"
+                                onchange="updateSelectionCount()">
                                 <div class="file-list flex-grow-1 py-1 px-2 border rounded bg-white small text-break">${f.path}</div>
                             </div>
                         `).join('')}
@@ -183,6 +205,40 @@
             alert('Error copying to clipboard. Ensure you are using a modern browser.');
         }
     }
+
+    function smartSelect() {
+    // 1. Get all duplicate set containers
+    const sets = document.querySelectorAll('.dupe-set');
+    
+    sets.forEach(set => {
+        const collapseEl = set.querySelector('.collapse');
+        const bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapseEl);
+        bsCollapse.show(); // or hide() if you prefer
+    });
+
+    sets.forEach(set => {
+        // 2. Get all checkboxes within this specific set
+        const checkboxes = Array.from(set.querySelectorAll('.file-check'));
+        
+        // 3. Sort them by date (Oldest first)
+        checkboxes.sort((a, b) => {
+            const dateA = new Date(a.getAttribute('data-date'));
+            const dateB = new Date(b.getAttribute('data-date'));
+            return dateA - dateB;
+        });
+
+        // 4. Skip the first one (oldest), check the rest
+        checkboxes.forEach((cb, index) => {
+            cb.checked = (index !== 0);
+        });
+    });
+
+    updateSelectionCount();
+    alert("Smart Selection Complete!\nWe've kept the oldest file in every set and selected the newer copies.");
+}
+
+
+
 
 </script>
 </body>
