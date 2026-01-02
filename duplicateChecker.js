@@ -23,15 +23,20 @@ const ERRORS_FILE = `skipped_${hostname}_${timestamp}_${pathLabel}.log`;
 const ALLOWED_EXTENSIONS = EXTENSIONS_INPUT ? new Set(EXTENSIONS_INPUT.split(',').map(ext => `.${ext.toLowerCase().trim()}`)) : null;
 const PARTIAL_SIZE = 16384;
 
-/**
- * Helper to format seconds into a readable string
- */
 function formatTime(seconds) {
-    if (!isFinite(seconds) || seconds < 0) return "Calculating...";
+    if (!isFinite(seconds) || seconds < 0) return "00:00:00";
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     const s = Math.floor(seconds % 60);
     return [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
+}
+
+function formatSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 function getFileHash(filePath, bytesToRead = null) {
@@ -58,7 +63,7 @@ async function walk(dir, fileList = [], skippedItems = []) {
                     const ext = path.extname(file).toLowerCase();
                     if (ALLOWED_EXTENSIONS && !ALLOWED_EXTENSIONS.has(ext)) continue;
                     fileList.push({ name: file, path: filePath, size: stat.size, created: stat.birthtime.toISOString() });
-                    process.stdout.write(`\r📂 Scanning... ${fileList.length} files found`);
+                    if (fileList.length % 50 === 0) process.stdout.write(`\r📂 Scanning... ${fileList.length} files found`);
                 }
             } catch (e) { skippedItems.push(`ACCESS DENIED: ${filePath}`); }
         }
@@ -92,54 +97,44 @@ async function findDuplicates() {
         return;
     }
 
-    // --- HASHING WITH TIME PREDICTION ---
     const processQueue = async (list, label) => {
         console.log(`\n${label} (${list.length} files)`);
         const results = new Map();
         const start = performance.now();
-
         for (let i = 0; i < list.length; i++) {
             const file = list[i];
             try {
-                const hash = label.includes("Partial") 
-                    ? await getFileHash(file.path, PARTIAL_SIZE) 
-                    : await getFileHash(file.path);
-                
+                const hash = label.includes("Partial") ? await getFileHash(file.path, PARTIAL_SIZE) : await getFileHash(file.path);
                 const key = label.includes("Partial") ? `${file.size}-${hash}` : hash;
                 if (!results.has(key)) results.set(key, []);
                 results.get(key).push(file);
             } catch (e) { masterSkippedList.push(`HASH ERROR: ${file.path}`); }
 
-            // PREDICTOR LOGIC
-            const now = performance.now();
-            const elapsed = (now - start) / 1000;
-            const rate = (i + 1) / elapsed; // files per second
-            const remaining = list.length - (i + 1);
-            const eta = remaining / rate;
-
-            process.stdout.write(
-                `\r   [${Math.floor(((i + 1) / list.length) * 100)}%] ` +
-                `ETA: ${formatTime(eta)} | ` +
-                `${i + 1}/${list.length} files`
-            );
+            if (i % 10 === 0 || i === list.length - 1) {
+                const elapsed = (performance.now() - start) / 1000;
+                const eta = ((list.length - (i + 1)) / ((i + 1) / elapsed));
+                process.stdout.write(`\r   [${Math.floor(((i + 1) / list.length) * 100)}%] ETA: ${formatTime(eta)} | ${i + 1}/${list.length}`);
+            }
         }
         process.stdout.write('\n');
         return results;
     };
 
     const partialResults = await processQueue(potentialMatches, "🔍 Stage 1: Partial Hashing");
-    
     const finalCandidates = Array.from(partialResults.values()).filter(g => g.length > 1).flat();
-    const finalDuplicates = finalCandidates.length > 0 
-        ? await processQueue(finalCandidates, "🧪 Stage 2: Full Content Verification")
-        : new Map();
+    const finalDuplicates = finalCandidates.length > 0 ? await processQueue(finalCandidates, "🧪 Stage 2: Full Content Verification") : new Map();
 
-    // --- CSV Generation ---
+    // --- REPORT GENERATION & SUMMARY ---
     let csvContent = "Filename,Date Created,Size (Bytes),Folder,Full Path\n";
-    let sets = 0;
+    let setsCount = 0;
+    let totalDuplicateFiles = 0;
+    let wastedBytes = 0;
+
     for (const [hash, files] of finalDuplicates) {
         if (files.length > 1) {
-            sets++;
+            setsCount++;
+            totalDuplicateFiles += files.length;
+            wastedBytes += files[0].size * (files.length - 1);
             files.forEach(f => {
                 const folder = path.dirname(f.path).replace(/"/g, '""');
                 csvContent += `"${f.name.replace(/"/g, '""')}","${f.created}","${f.size}","${folder}","${f.path}"\n`;
@@ -147,12 +142,20 @@ async function findDuplicates() {
         }
     }
 
-    if (sets > 0) await fs.writeFile(OUTPUT_FILE, csvContent);
+    if (setsCount > 0) await fs.writeFile(OUTPUT_FILE, csvContent);
     if (masterSkippedList.length > 0) await fs.writeFile(ERRORS_FILE, masterSkippedList.join('\n'));
 
     const totalTime = (performance.now() - totalStart) / 1000;
-    console.log(`\n✅ Done! Total Time: ${formatTime(totalTime)}`);
-    console.log(`📄 Report: ${OUTPUT_FILE}`);
+
+    console.log(`\n================ SCAN SUMMARY ================`);
+    console.log(`💻 Hostname:      ${hostname}`);
+    console.log(`⏱️  Total Time:    ${formatTime(totalTime)}`);
+    console.log(`📂 Files Scanned: ${masterFileList.length}`);
+    console.log(`👯 Duplicate Sets: ${setsCount}`);
+    console.log(`📄 Total Dupes:   ${totalDuplicateFiles} files`);
+    console.log(`💾 POTENTIAL SAVINGS: ${formatSize(wastedBytes)}`);
+    console.log(`==============================================`);
+    console.log(`\n✅ Report: ${OUTPUT_FILE}`);
     if (masterSkippedList.length > 0) console.log(`⚠️  Skipped Log: ${ERRORS_FILE}`);
 }
 
