@@ -1,0 +1,214 @@
+{
+  "metadata": {
+    "hostname": "DESKTOP-FJPOIBA",
+    "scanDate": "2026-01-02T20:22:31.672Z",
+    "targetPaths": [
+      "."
+    ],
+    "durationSeconds": "0.10"
+  },
+  "summary": {
+    "totalFilesScanned": 102,
+    "duplicateSets": 9,
+    "totalDuplicateFiles": 22,
+    "potentialSavingsBytes": 670
+  },
+  "sets": [
+    {
+      "hash": "40dfad38f36c0b34babebb8d2f9a73e7",
+      "size": 211,
+      "fileCount": 2,
+      "files": [
+        {
+          "name": "main",
+          "path": ".git\\logs\\refs\\heads\\main",
+          "size": 211,
+          "created": "2025-12-20T18:31:16.466Z"
+        },
+        {
+          "name": "HEAD",
+          "path": ".git\\logs\\refs\\remotes\\origin\\HEAD",
+          "size": 211,
+          "created": "2025-12-20T18:31:16.454Z"
+        }
+      ]
+    },
+    {
+      "hash": "150b9ebda3debd9a17854a5720de82dd",
+      "size": 41,
+      "fileCount": 5,
+      "files": [
+        {
+          "name": "ORIG_HEAD",
+          "path": ".git\\ORIG_HEAD",
+          "size": 41,
+          "created": "2026-01-02T12:12:33.382Z"
+        },
+        {
+          "name": "8_with_multidrive_option",
+          "path": ".git\\refs\\heads\\8_with_multidrive_option",
+          "size": 41,
+          "created": "2025-12-22T21:51:05.760Z"
+        },
+        {
+          "name": "9_with_predictive_timer",
+          "path": ".git\\refs\\heads\\9_with_predictive_timer",
+          "size": 41,
+          "created": "2026-01-02T11:54:46.765Z"
+        },
+        {
+          "name": "8_with_multidrive_option",
+          "path": ".git\\refs\\remotes\\origin\\8_with_multidrive_option",
+          "size": 41,
+          "created": "2025-12-22T21:51:54.378Z"
+        },
+        {
+          "name": "9_with_predictive_timer",
+          "path": ".git\\refs\\remotes\\origin\\9_with_predictive_timer",
+          "size": 41,
+          "created": "2026-01-02T12:07:35.332Z"
+        }
+      ]
+    },
+    {
+      "hash": "56a2ac8ea36636f532c3f50896d19fbf",
+      "size": 41,
+      "fileCount": 2,
+      "files": [
+        {
+          "name": "10_initial_version_finished",
+          "path": ".git\\refs\\heads\\10_initial_version_finished",
+          "size": 41,
+          "created": "2026-01-02T12:15:55.508Z"
+        },
+        {
+          "name": "10_initial_version_finished",
+          "path": ".git\\refs\\remotes\\origin\\10_initial_version_finished",
+          "size": 41,
+          "created": "2026-01-02T12:16:26.723Z"
+        }
+      ]
+    },
+    {
+      "hash": "0eb8e428d465ebeeef03084098b98981",
+      "size": 41,
+      "fileCount": 3,
+      "files": [
+        {
+          "name": "11_Before_UI_resolves_audit_issues",
+          "path": ".git\\refs\\heads\\11_Before_UI_resolves_audit_issues",
+          "size": 41,
+          "created": "2026-01-02T20:15:22.967Z"
+        },
+        {
+          "name": "12_For_UI_updated_to_output_json",
+          "path": ".git\\refs\\heads\\12_For_UI_updated_to_output_json",
+          "size": 41,
+          "created": "2026-01-02T20:18:26.053Z"
+        },
+        {
+          "name": "11_Before_UI_resolves_audit_issues",
+          "path": ".git\\refs\\remotes\\origin\\11_Before_UI_resolves_audit_issues",
+          "size": 41,
+          "created": "2026-01-02T20:16:07.399Z"
+        }
+      ]
+    },
+    {
+      "hash": "11a0e8605f303a832032039bac1eb7aa",
+      "size": 41,
+      "fileCount": 2,
+      "files": [
+        {
+          "name": "1_Working_checks_and_reports_dupes",
+          "path": ".git\\refs\\heads\\1_Working_checks_and_reports_dupes",
+          "size": 41,
+          "created": "2025-12-20T18:44:44.487Z"
+        },
+        {
+          "name": "1_Working_checks_and_reports_dupes",
+          "path": ".git\\refs\\remotes\\origin\\1_Working_checks_and_reports_dupes",
+          "size": 41,
+          "created": "2025-12-20T19:00:43.929Z"
+        }
+      ]
+    },
+    {
+      "hash": "eec0a6970fd43482f14134767e21d2b0",
+      "size": 41,
+      "fileCount": 2,
+      "files": [
+        {
+          "name": "5_with_error_log_generation",
+          "path": ".git\\refs\\heads\\5_with_error_log_generation",
+          "size": 41,
+          "created": "2025-12-22T21:26:22.498Z"
+        },
+        {
+          "name": "5_with_error_log_generation",
+          "path": ".git\\refs\\remotes\\origin\\5_with_error_log_generation",
+          "size": 41,
+          "created": "2025-12-22T21:27:51.345Z"
+        }
+      ]
+    },
+    {
+      "hash": "0865154d027e7bb067d6d6fb153a03d7",
+      "size": 41,
+      "fileCount": 2,
+      "files": [
+        {
+          "name": "6_with_dynamic_unique_filename",
+          "path": ".git\\refs\\heads\\6_with_dynamic_unique_filename",
+          "size": 41,
+          "created": "2025-12-22T21:34:04.850Z"
+        },
+        {
+          "name": "6_with_dynamic_unique_filename",
+          "path": ".git\\refs\\remotes\\origin\\6_with_dynamic_unique_filename",
+          "size": 41,
+          "created": "2025-12-22T21:35:46.689Z"
+        }
+      ]
+    },
+    {
+      "hash": "bbf18fa8765efdba3a223d770727a9ee",
+      "size": 41,
+      "fileCount": 2,
+      "files": [
+        {
+          "name": "7_with_file_counter",
+          "path": ".git\\refs\\heads\\7_with_file_counter",
+          "size": 41,
+          "created": "2025-12-22T21:39:50.929Z"
+        },
+        {
+          "name": "7_with_file_counter",
+          "path": ".git\\refs\\remotes\\origin\\7_with_file_counter",
+          "size": 41,
+          "created": "2025-12-22T21:42:31.134Z"
+        }
+      ]
+    },
+    {
+      "hash": "76ec01da3ee5c038bf002bbed3c7652e",
+      "size": 8,
+      "fileCount": 2,
+      "files": [
+        {
+          "name": "File 1.txt",
+          "path": "File 1.txt",
+          "size": 8,
+          "created": "2025-12-20T18:31:52.926Z"
+        },
+        {
+          "name": "File 2.txt",
+          "path": "File 2.txt",
+          "size": 8,
+          "created": "2025-12-20T18:31:52.930Z"
+        }
+      ]
+    }
+  ],
+  "errors": []
+}
