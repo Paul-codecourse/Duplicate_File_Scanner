@@ -2,121 +2,97 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Duplicate File Audit</title>
+    <title>File Audit Dashboard</title>
+    <link rel="stylesheet" href="assets/bootstrap.min.css">
     <style>
-        :root {
-            --bg: #f4f7f6;
-            --card: #ffffff;
-            --primary: #2c3e50;
-            --accent: #3498db;
-            --danger: #e74c3c;
-            --success: #27ae60;
-            --text: #333;
-        }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        
-        /* Header & Upload */
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .upload-btn { background: var(--accent); color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; display: inline-block; }
-        input[type="file"] { display: none; }
-
-        /* Dashboard Stats */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: var(--card); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
-        .stat-card h3 { margin: 0; color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase; }
-        .stat-card p { margin: 10px 0 0; font-size: 1.8rem; font-weight: bold; color: var(--primary); }
-
-        /* Duplicate Sets */
-        .set-card { background: var(--card); margin-bottom: 15px; border-radius: 8px; overflow: hidden; border-left: 5px solid var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .set-header { padding: 15px; background: #fafafa; display: flex; justify-content: space-between; cursor: pointer; border-bottom: 1px solid #eee; }
-        .set-header:hover { background: #f1f1f1; }
-        .set-body { padding: 15px; display: none; }
-        .set-body.active { display: block; }
-
-        .file-path { font-family: monospace; font-size: 0.85rem; background: #f8f9fa; padding: 5px; margin: 5px 0; border: 1px solid #ddd; word-break: break-all; }
-        .tag { font-size: 0.75rem; padding: 3px 8px; border-radius: 10px; background: #eee; }
-        .error-log { color: var(--danger); font-size: 0.9rem; }
+        body { background-color: #f8f9fa; }
+        .stat-card { border-radius: 10px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .file-list { font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; background: #eee; padding: 10px; border-radius: 5px; }
+        .set-header { cursor: pointer; transition: background 0.2s; }
+        .set-header:hover { background-color: #f1f1f1 !important; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>File Audit Dashboard</h1>
-        <label class="upload-btn">
-            Load JSON Report
-            <input type="file" id="fileInput" accept=".json">
-        </label>
+<div class="container py-4">
+    <header class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">System File Audit</h1>
+        <input type="file" id="fileInput" class="form-control w-auto" accept=".json">
     </header>
 
-    <div id="dashboard" style="display: none;">
-        <div class="stats-grid">
-            <div class="stat-card"><h3>Potential Savings</h3><p id="stat-savings">-</p></div>
-            <div class="stat-card"><h3>Duplicate Sets</h3><p id="stat-sets">-</p></div>
-            <div class="stat-card"><h3>Files Scanned</h3><p id="stat-scanned">-</p></div>
-            <div class="stat-card"><h3>Duration</h3><p id="stat-duration">-</p></div>
+    <div id="content" style="display:none;">
+        <div class="row g-3 mb-4">
+            <div class="col-md-3"><div class="card stat-card p-3"><h6>Savings</h6><h4 id="stat-savings" class="text-success">-</h4></div></div>
+            <div class="col-md-3"><div class="card stat-card p-3"><h6>Duplicate Sets</h6><h4 id="stat-sets">-</h4></div></div>
+            <div class="col-md-3"><div class="card stat-card p-3"><h6>Total Files</h6><h4 id="stat-files">-</h4></div></div>
+            <div class="col-md-3"><div class="card stat-card p-3"><h6>Scan Time</h6><h4 id="stat-time">-</h4></div></div>
         </div>
 
-        <h2>Identified Duplicate Groups</h2>
-        <div id="results-list"></div>
+        <ul class="nav nav-tabs mb-3" id="auditTabs">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-dupes">Duplicates</button></li>
+            <li class="nav-item"><button class="nav-link text-danger" data-bs-toggle="tab" data-bs-target="#tab-errors">Skipped Items</button></li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="tab-dupes">
+                <div id="dupe-list"></div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-errors">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm">
+                        <thead class="table-light"><tr><th>Path</th><th>Reason</th></tr></thead>
+                        <tbody id="error-list"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
+<script src="assets/bootstrap.bundle.min.js"></script>
+
 <script>
-    const fileInput = document.getElementById('fileInput');
-    const dashboard = document.getElementById('dashboard');
-
-    fileInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
+    // [The JavaScript logic to handle the JSON remains similar, 
+    // but now injects data into 'error-list' as well as 'dupe-list']
+    
+    document.getElementById('fileInput').addEventListener('change', function(e) {
         const reader = new FileReader();
-        reader.onload = function(e) {
-            const data = JSON.parse(e.target.result);
-            renderDashboard(data);
+        reader.onload = function(event) {
+            const data = JSON.parse(event.target.result);
+            render(data);
         };
-        reader.readAsText(file);
+        reader.readAsText(e.target.files[0]);
     });
 
-    function formatBytes(bytes) {
-        if (bytes === 0) return '0 B';
-        const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + ['B', 'KB', 'MB', 'GB', 'TB'][i];
-    }
-
-    function renderDashboard(data) {
-        dashboard.style.display = 'block';
+    function render(data) {
+        document.getElementById('content').style.display = 'block';
         
-        // Update Stats
-        document.getElementById('stat-savings').textContent = formatBytes(data.summary.potentialSavingsBytes);
-        document.getElementById('stat-sets').textContent = data.summary.duplicateSets;
-        document.getElementById('stat-scanned').textContent = data.summary.totalFilesScanned;
-        document.getElementById('stat-duration').textContent = data.metadata.durationSeconds + 's';
+        // Render Stats
+        document.getElementById('stat-savings').innerText = (data.summary.potentialSavingsBytes / 1024 / 1024 / 1024).toFixed(2) + " GB";
+        document.getElementById('stat-sets').innerText = data.summary.duplicateSets;
+        document.getElementById('stat-files').innerText = data.summary.totalFilesScanned;
+        document.getElementById('stat-time').innerText = data.metadata.durationSeconds + "s";
 
-        // Render Sets
-        const list = document.getElementById('results-list');
-        list.innerHTML = '';
+        // Render Duplicates
+        const dupeContainer = document.getElementById('dupe-list');
+        dupeContainer.innerHTML = data.sets.map((set, i) => `
+            <div class="card mb-2">
+                <div class="card-header set-header d-flex justify-content-between" data-bs-toggle="collapse" data-bs-target="#set-${i}">
+                    <span><strong>${set.files[0].name}</strong> (${(set.size/1024).toFixed(1)} KB)</span>
+                    <span class="badge bg-primary rounded-pill">${set.fileCount} copies</span>
+                </div>
+                <div class="collapse" id="set-${i}">
+                    <div class="card-body bg-light"><div class="file-list">${set.files.map(f => `<div>${f.path}</div>`).join('')}</div></div>
+                </div>
+            </div>
+        `).join('');
 
-        data.sets.sort((a, b) => b.size - a.size).forEach((set, index) => {
-            const card = document.createElement('div');
-            card.className = 'set-card';
-            
-            card.innerHTML = `
-                <div class="set-header" onclick="this.nextElementSibling.classList.toggle('active')">
-                    <div>
-                        <strong>${set.files[0].name}</strong> 
-                        <span class="tag">${formatBytes(set.size)} each</span>
-                    </div>
-                    <div>${set.fileCount} copies ▾</div>
-                </div>
-                <div class="set-body">
-                    ${set.files.map(f => `<div class="file-path">${f.path}</div>`).join('')}
-                </div>
-            `;
-            list.appendChild(card);
-        });
+        // Render Errors
+        const errorContainer = document.getElementById('error-list');
+        errorContainer.innerHTML = data.errors.map(err => `
+            <tr><td class="small text-break">${err.path}</td><td><span class="badge bg-danger">${err.reason}</span></td></tr>
+        `).join('');
     }
 </script>
 </body>
