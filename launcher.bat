@@ -39,9 +39,9 @@ echo.
 
 :: 4. Execute Node Script
 if "%exts%"=="" (
-    node duplicateChecker.js "%scanPath%"
+    node duplicateCheckerV11.js "%scanPath%"
 ) else (
-    node duplicateChecker.js "%scanPath%" "%exts%"
+    node duplicateCheckerV11.js "%scanPath%" "%exts%"
 )
 
 :: 5. Conclusion
