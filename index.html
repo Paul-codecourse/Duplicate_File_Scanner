@@ -28,6 +28,20 @@
             <div class="col-md-3"><div class="card stat-card p-3"><h6>Scan Time</h6><h4 id="stat-time">-</h4></div></div>
         </div>
 
+        <div id="actionBar" class="sticky-top bg-white border-bottom py-2 mb-3" style="display:none; z-index: 1020;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span id="selectedCount" class="badge bg-primary me-2">0</span> 
+                    <span class="text-muted">files selected</span>
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-outline-danger me-2" onclick="deselectAll()">Deselect All</button>
+                    <button class="btn btn-primary" onclick="copySelectedPaths()">📋 Copy Selected Paths</button>
+                </div>
+            </div>
+        </div>
+
+
         <div class="row mb-3">
             <div class="col-md-12">
                 <div class="input-group">
@@ -85,16 +99,23 @@
         document.getElementById('stat-files').innerText = data.summary.totalFilesScanned;
         document.getElementById('stat-time').innerText = data.metadata.durationSeconds + "s";
 
-        // Render Duplicates
+        // Render Duplicates with Checkboxes
         const dupeContainer = document.getElementById('dupe-list');
         dupeContainer.innerHTML = data.sets.map((set, i) => `
-            <div class="card mb-2">
-                <div class="card-header set-header d-flex justify-content-between" data-bs-toggle="collapse" data-bs-target="#set-${i}">
+            <div class="card mb-2 dupe-set" data-size="${set.size}">
+                <div class="card-header set-header d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#set-${i}">
                     <span><strong>${set.files[0].name}</strong> (${(set.size/1024).toFixed(1)} KB)</span>
-                    <span class="badge bg-primary rounded-pill">${set.fileCount} copies</span>
+                    <span class="badge bg-secondary rounded-pill">${set.fileCount} copies</span>
                 </div>
                 <div class="collapse" id="set-${i}">
-                    <div class="card-body bg-light"><div class="file-list">${set.files.map(f => `<div>${f.path}</div>`).join('')}</div></div>
+                    <div class="card-body bg-light">
+                        ${set.files.map((f, fileIdx) => `
+                            <div class="d-flex align-items-center mb-1">
+                                <input type="checkbox" class="file-check form-check-input me-2" value="${f.path}" onchange="updateSelectionCount()">
+                                <div class="file-list flex-grow-1 py-1 px-2 border rounded bg-white small text-break">${f.path}</div>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
             </div>
         `).join('');
@@ -104,7 +125,7 @@
         errorContainer.innerHTML = data.errors.map(err => `
             <tr><td class="small text-break">${err.path}</td><td><span class="badge bg-danger">${err.reason}</span></td></tr>
         `).join('');
-
+    
         // Search Functionality
         const searchInput = document.getElementById('searchInput');
         const clearSearch = document.getElementById('clearSearch');
@@ -133,8 +154,35 @@
             searchInput.value = '';
             searchInput.dispatchEvent(new Event('input'));
         });
-
     }
+
+    function updateSelectionCount() {
+        const checked = document.querySelectorAll('.file-check:checked');
+        const bar = document.getElementById('actionBar');
+        const countDisplay = document.getElementById('selectedCount');
+        
+        countDisplay.innerText = checked.length;
+        bar.style.display = checked.length > 0 ? 'block' : 'none';
+    }
+
+    function deselectAll() {
+        document.querySelectorAll('.file-check').forEach(cb => cb.checked = false);
+        updateSelectionCount();
+    }
+
+    async function copySelectedPaths() {
+        const checked = document.querySelectorAll('.file-check:checked');
+        const paths = Array.from(checked).map(cb => cb.value).join('\n');
+
+        try {
+            await navigator.clipboard.writeText(paths);
+            alert('✅ ' + checked.length + ' paths copied to clipboard!\nYou can now paste these into a text file or your deletion script.');
+        } catch (err) {
+            console.error('Failed to copy: ', err);
+            alert('Error copying to clipboard. Ensure you are using a modern browser.');
+        }
+    }
+
 </script>
 </body>
 </html>
