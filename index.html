@@ -5,268 +5,254 @@
     <title>File Audit Dashboard</title>
     <link rel="stylesheet" href="assets/bootstrap.min.css">
     <style>
-        body { background-color: #f8f9fa; padding-top: 110px;}
+        body { background-color: #f8f9fa; padding-top: 110px; }
         .stat-card { border-radius: 10px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .file-list { font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; background: #eee; padding: 10px; border-radius: 5px; }
+        .file-list { font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; background: #eee; padding: 8px; border-radius: 5px; }
         .set-header { cursor: pointer; transition: background 0.2s; }
         .set-header:hover { background-color: #f1f1f1 !important; }
-        .file-check:checked + .file-list {
-            background-color: #d1e7dd; /* light green */
-            border-color: #0f5132;}
-        .sticky-top { backdrop-filter: blur(6px); background-color: rgba(248, 249, 250, 0.95);}
+        .sticky-top { backdrop-filter: blur(6px); background-color: rgba(248,249,250,0.95); }
     </style>
 </head>
 <body>
 
-    <div><!-- Installation Section -->
-
-<section id="install">
-  <h2>Install Duplicate File Scanner</h2>
-  <p>Select your operating system:</p>
-
-  <div class="install-buttons">
-    <a
-      href="https://github.com/Paul-codecourse/Duplicate_File_Scanner/releases/latest/download/DuplicateFileScanner-Windows-Setup.exe"
-      class="install-btn windows"
-    >
-      🪟 Download for Windows
-    </a>
-
-```
-<a
-  href="https://github.com/Paul-codecourse/Duplicate_File_Scanner/releases/latest/download/DuplicateFileScanner-Linux.AppImage"
-  class="install-btn linux"
->
-  🐧 Download for Linux
-</a>
-```
-
-  </div>
+<!-- Install Section -->
+<section id="install" class="container mt-3">
+    <h2>Install Duplicate File Scanner</h2>
+    <p>Select your operating system:</p>
+    <div class="d-flex gap-3">
+        <a href="https://github.com/Paul-codecourse/Duplicate_File_Scanner/releases/latest/download/DuplicateFileScanner-Windows-Setup.exe"
+           class="btn btn-primary">🪟 Windows</a>
+        <a href="https://github.com/Paul-codecourse/Duplicate_File_Scanner/releases/latest/download/DuplicateFileScanner-Linux.AppImage"
+           class="btn btn-dark">🐧 Linux</a>
+    </div>
 </section>
-</div>
 
+
+<!-- Header -->
 <div class="sticky-top bg-light border-bottom" style="z-index:1030;">
     <div class="container py-3">
         <header class="d-flex justify-content-between align-items-center">
-            <h1 class="h3 mb-0">System File Audit</h1>
+            <h1 class="h4 mb-0">System File Audit</h1>
             <input type="file" id="fileInput" class="form-control w-auto" accept=".json">
         </header>
 
-        <ul class="nav nav-tabs mt-3" id="auditTabs">
+        <ul class="nav nav-tabs mt-3">
             <li class="nav-item">
-                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-dupes">
-                    Duplicates
-                </button>
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-dupes">Duplicates</button>
             </li>
             <li class="nav-item">
-                <button class="nav-link text-danger" data-bs-toggle="tab" data-bs-target="#tab-errors">
-                    Skipped Items
-                </button>
+                <button class="nav-link text-danger" data-bs-toggle="tab" data-bs-target="#tab-errors">Skipped Items</button>
             </li>
         </ul>
     </div>
-</div>
+
+
 <div class="container py-4">
+    <h1>container</h1> 
+<div id="content" style="display:none;">
 
-    <div id="content" style="display:none;">
-        <div class="row g-3 mb-4">
-            <div class="col-md-3"><div class="card stat-card p-3"><h6>Savings</h6><h4 id="stat-savings" class="text-success">-</h4></div></div>
-            <div class="col-md-3"><div class="card stat-card p-3"><h6>Duplicate Sets</h6><h4 id="stat-sets">-</h4></div></div>
-            <div class="col-md-3"><div class="card stat-card p-3"><h6>Total Files</h6><h4 id="stat-files">-</h4></div></div>
-            <div class="col-md-3"><div class="card stat-card p-3"><h6>Scan Time</h6><h4 id="stat-time">-</h4></div></div>
-        </div>
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="card stat-card p-3"><h6>Savings</h6><h4 id="stat-savings">-</h4></div></div>
+        <div class="col-md-3"><div class="card stat-card p-3"><h6>Duplicate Sets</h6><h4 id="stat-sets">-</h4></div></div>
+        <div class="col-md-3"><div class="card stat-card p-3"><h6>Total Files</h6><h4 id="stat-files">-</h4></div></div>
+        <div class="col-md-3"><div class="card stat-card p-3"><h6>Scan Time</h6><h4 id="stat-time">-</h4></div></div>
+    </div>
 
-    <div id="actionBar" class="sticky-top bg-white border-bottom py-2 mb-3" style="display:none; z-index: 1020;">
+    <!-- Action Bar -->
+    <div id="actionBar" class="sticky-top bg-white border-bottom py-2 mb-3" style="display:none; z-index:1020;"><h1>Action Bar</h1>
         <div class="container d-flex justify-content-between align-items-center">
             <div>
-                <span id="selectedCount" class="badge bg-primary me-2">0</span> 
-                <span class="text-muted">files selected</span>
+                <span id="selectedCount" class="badge bg-primary">0</span>
+                <span class="text-muted ms-2">files selected</span>
             </div>
             <div>
-                <button class="btn btn-sm btn-outline-primary me-2" onclick="smartSelect()" title="Keeps the oldest file in every set and selects the rest">
-                    🪄 Smart Select (Keep Oldest)
-                </button>
-                <button class="btn btn-sm btn-outline-danger me-2" onclick="deselectAll()">Deselect All</button>
-                <button class="btn btn-primary" onclick="copySelectedPaths()">📋 Copy Selected Paths</button>
+                <button class="btn btn-sm btn-outline-warning me-2" id="toggleSystemBtn" onclick="toggleSystemFiles()">🚫 Exclude System Files</button>
+                <button class="btn btn-sm btn-outline-primary me-2" onclick="smartSelect()">🪄 Smart Select</button>
+                <button class="btn btn-sm btn-outline-danger me-2" onclick="deselectAll()">Deselect</button>
+                <button class="btn btn-primary btn-sm" onclick="copySelectedPaths()">📋 Copy Paths</button>
+                <button class="btn btn-sm btn-outline-success me-2" id="toggleMediaBtn" onclick="toggleMediaOnly()">
+    🖼️ Show Media Only
+</button>
+
             </div>
         </div>
     </div>
 
-        <div class="row mb-3">
-            <div class="col-md-12">
-                <div class="input-group">
-                    <span class="input-group-text bg-white">🔍</span>
-                    <input type="text" id="searchInput" class="form-control" placeholder="Search by filename or path (e.g., .jpg, /Backups/)...">
-                    <button class="btn btn-outline-secondary" type="button" id="clearSearch">Clear</button>
-                </div>
-                <div id="searchStats" class="form-text mt-1 text-muted"></div>
-            </div>
+    <!-- Tabs -->
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="tab-dupes">
+            <div id="dupe-list"></div>
         </div>
 
-        <div class="tab-content">
-            <div class="tab-pane fade show active" id="tab-dupes">
-                <div id="dupe-list"></div>
-            </div>
-
-            <div class="tab-pane fade" id="tab-errors">
-                <div class="table-responsive">
-                    <table class="table table-hover table-sm">
-                        <thead class="table-light"><tr><th>Path</th><th>Reason</th></tr></thead>
-                        <tbody id="error-list"></tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="tab-pane fade" id="tab-errors">
+            <table class="table table-sm table-hover">
+                <thead class="table-light"><tr><th>Path</th><th>Reason</th></tr></thead>
+                <tbody id="error-list"></tbody>
+            </table>
         </div>
     </div>
+
+</div>
 </div>
 
 <script src="assets/bootstrap.bundle.min.js"></script>
+<script>
+const SYSTEM_PATH_PATTERNS = [/^\.git\//, /^\/proc\//, /^\/sys\//, /^\/dev\//, /^\/run\//, /^\/etc\//];
+
+const IMAGE_EXTENSIONS = ['jpg','jpeg','png','gif','bmp','webp','svg'];
+const VIDEO_EXTENSIONS = ['mp4','mkv','avi','mov','webm','wmv','flv'];
+
+let systemFilesHidden = false;
+let mediaOnlyMode = false;
+
+function getExtension(path) {
+    return path.split('.').pop().toLowerCase();
+}
+
+function isMediaFile(path) {
+    const ext = getExtension(path);
+    return IMAGE_EXTENSIONS.includes(ext) || VIDEO_EXTENSIONS.includes(ext);
+}
+
+function isImageFile(path) {
+    return IMAGE_EXTENSIONS.includes(getExtension(path));
+}
+</script>
 
 <script>
-    // [The JavaScript logic to handle the JSON remains similar, 
-    // but now injects data into 'error-list' as well as 'dupe-list']
-    
-    document.getElementById('fileInput').addEventListener('change', function(e) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const data = JSON.parse(event.target.result);
-            render(data);
-        };
-        reader.readAsText(e.target.files[0]);
-    });
 
-    function render(data) {
-        document.getElementById('content').style.display = 'block';
-        
-        // Render Stats
-        document.getElementById('stat-savings').innerText = (data.summary.potentialSavingsBytes / 1024 / 1024 / 1024).toFixed(2) + " GB";
-        document.getElementById('stat-sets').innerText = data.summary.duplicateSets;
-        document.getElementById('stat-files').innerText = data.summary.totalFilesScanned;
-        document.getElementById('stat-time').innerText = data.metadata.durationSeconds + "s";
+function isSystemPath(path) {
+    return SYSTEM_PATH_PATTERNS.some(rx => rx.test(path));
+}
 
-        // Render Duplicates with Checkboxes
-        const dupeContainer = document.getElementById('dupe-list');
-        dupeContainer.innerHTML = data.sets.map((set, i) => `
-            <div class="card mb-2 dupe-set" data-size="${set.size}">
-                <div class="card-header set-header d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#set-${i}">
-                    <span><strong>${set.files[0].name}</strong> (${(set.size/1024).toFixed(1)} KB)</span>
-                    <span class="badge bg-secondary rounded-pill">${set.fileCount} copies</span>
-                </div>
-                <div class="collapse" id="set-${i}">
-                    <div class="card-body bg-light">
-                        ${set.files.map((f, fileIdx) => `
-                            <div class="d-flex align-items-center mb-1">
-                                <input type="checkbox"
-                                class="file-check form-check-input me-2"
-                                value="${f.path}"
-                                data-date="${f.modified}"
+document.getElementById('fileInput').addEventListener('change', e => {
+    const reader = new FileReader();
+    reader.onload = ev => render(JSON.parse(ev.target.result));
+    reader.readAsText(e.target.files[0]);
+});
+
+function render(data) {
+    document.getElementById('content').style.display = 'block';
+
+    document.getElementById('stat-savings').innerText =
+        (data.summary.potentialSavingsBytes / 1024 / 1024 / 1024).toFixed(2) + " GB";
+    document.getElementById('stat-sets').innerText = data.summary.duplicateSets;
+    document.getElementById('stat-files').innerText = data.summary.totalFilesScanned;
+    document.getElementById('stat-time').innerText = data.metadata.durationSeconds + "s";
+
+    document.getElementById('dupe-list').innerHTML = data.sets.map((set,i)=>`
+        <div class="card mb-2 dupe-set">
+            <div class="card-header set-header" data-bs-toggle="collapse" data-bs-target="#set-${i}">
+                <strong>${set.files[0].name}</strong> (${(set.size/1024).toFixed(1)} KB)
+                <span class="badge bg-secondary float-end">${set.fileCount}</span>
+            </div>
+            <div class="collapse" id="set-${i}">
+                <div class="card-body bg-light">
+                    ${set.files.map(f=>{
+                        const sys=isSystemPath(f.path);
+                        return `
+                        <div class="d-flex align-items-center mb-1 file-row"
+                            data-media="${isMediaFile(f.path) ? '1' : '0'}"
+                            data-image="${isImageFile(f.path) ? '1' : '0'}">
+
+                            <input type="checkbox" class="file-check me-2"
+                                value="${f.path}" data-date="${f.created}"
+                                data-system="${sys?'1':'0'}"
                                 onchange="updateSelectionCount()">
-                                <div class="file-list flex-grow-1 py-1 px-2 border rounded bg-white small text-break">${f.path}</div>
+
+                            <div class="file-list flex-grow-1 ${sys?'text-muted fst-italic':''}">
+                                ${f.path}
+                                ${sys?' <span class="badge bg-secondary">system</span>':''}
+
+                                <div class="thumb mt-1" style="display:none;">
+                                    ${isImageFile(f.path)
+                                        ? `<img src="file://${f.path}" 
+                                                style="max-height:80px; max-width:120px; border-radius:4px;">`
+                                        : `<span class="badge bg-dark">video</span>`
+                                    }
+                                </div>
                             </div>
-                        `).join('')}
-                    </div>
+                        </div>`;
+
+                    }).join('')}
                 </div>
             </div>
-        `).join('');
+        </div>
+    `).join('');
 
+    document.getElementById('error-list').innerHTML =
+        data.errors.map(e=>`<tr><td>${e.path}</td><td>${e.reason}</td></tr>`).join('');
+}
 
-        // Render Errors
-        const errorContainer = document.getElementById('error-list');
-        errorContainer.innerHTML = data.errors.map(err => `
-            <tr><td class="small text-break">${err.path}</td><td><span class="badge bg-danger">${err.reason}</span></td></tr>
-        `).join('');
-    
-        // Search Functionality
-        const searchInput = document.getElementById('searchInput');
-        const clearSearch = document.getElementById('clearSearch');
-        const searchStats = document.getElementById('searchStats');
+function updateSelectionCount() {
+    const c = document.querySelectorAll('.file-check:checked').length;
+    document.getElementById('selectedCount').innerText = c;
 
-        searchInput.addEventListener('input', function() {
-            const query = this.value.toLowerCase();
-            const cards = document.querySelectorAll('#dupe-list .card');
-            let visibleCount = 0;
+    document.getElementById('actionBar').style.display =
+        (c || mediaOnlyMode) ? 'block' : 'none';
+}
 
-            cards.forEach(card => {
-                // We look at the header (filename) and the body (all paths)
-                const text = card.innerText.toLowerCase();
-                if (text.includes(query)) {
-                    card.style.display = "";
-                    visibleCount++;
-                } else {
-                    card.style.display = "none";
-                }
-            });
-
-            searchStats.innerText = query ? `Showing ${visibleCount} matching sets` : "";
-        });
-
-        clearSearch.addEventListener('click', () => {
-            searchInput.value = '';
-            searchInput.dispatchEvent(new Event('input'));
-        });
-    }
-
-    function updateSelectionCount() {
-        const checked = document.querySelectorAll('.file-check:checked');
-        const bar = document.getElementById('actionBar');
-        const countDisplay = document.getElementById('selectedCount');
-        
-        countDisplay.innerText = checked.length;
-        bar.style.display = checked.length > 0 ? 'block' : 'none';
-    }
-
-    function deselectAll() {
-        document.querySelectorAll('.file-check').forEach(cb => cb.checked = false);
-        updateSelectionCount();
-    }
-
-    async function copySelectedPaths() {
-        const checked = document.querySelectorAll('.file-check:checked');
-        const paths = Array.from(checked).map(cb => cb.value).join('\n');
-
-        try {
-            await navigator.clipboard.writeText(paths);
-            alert('✅ ' + checked.length + ' paths copied to clipboard!\nYou can now paste these into a text file or your deletion script.');
-        } catch (err) {
-            console.error('Failed to copy: ', err);
-            alert('Error copying to clipboard. Ensure you are using a modern browser.');
-        }
-    }
-
-    function smartSelect() {
-    // 1. Get all duplicate set containers
-    const sets = document.querySelectorAll('.dupe-set');
-    
-    sets.forEach(set => {
-        const collapseEl = set.querySelector('.collapse');
-        const bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapseEl);
-        bsCollapse.show(); // or hide() if you prefer
-    });
-
-    sets.forEach(set => {
-        // 2. Get all checkboxes within this specific set
-        const checkboxes = Array.from(set.querySelectorAll('.file-check'));
-        
-        // 3. Sort them by date (Oldest first)
-        checkboxes.sort((a, b) => {
-            const dateA = new Date(a.getAttribute('data-date'));
-            const dateB = new Date(b.getAttribute('data-date'));
-            return dateA - dateB;
-        });
-
-        // 4. Skip the first one (oldest), check the rest
-        checkboxes.forEach((cb, index) => {
-            cb.checked = (index !== 0);
-        });
-    });
-
+function deselectAll() {
+    document.querySelectorAll('.file-check').forEach(cb=>cb.checked=false);
     updateSelectionCount();
-    alert("Smart Selection Complete!\nWe've kept the oldest file in every set and selected the newer copies.");
+}
+
+async function copySelectedPaths() {
+    const paths=[...document.querySelectorAll('.file-check:checked')].map(cb=>cb.value).join('\n');
+    await navigator.clipboard.writeText(paths);
+    alert(`${paths.split('\n').length} paths copied`);
+}
+
+function toggleSystemFiles() {
+    systemFilesHidden=!systemFilesHidden;
+    document.querySelectorAll('.file-check[data-system="1"]').forEach(cb=>{
+        cb.checked=false;
+        cb.closest('.file-row').style.display=systemFilesHidden?'none':'';
+    });
+    document.getElementById('toggleSystemBtn').innerText=
+        systemFilesHidden?'👁️ Show System Files':'🚫 Exclude System Files';
+    updateSelectionCount();
+}
+
+function smartSelect() {
+    document.querySelectorAll('.dupe-set').forEach(set=>{
+        const cbs=[...set.querySelectorAll('.file-check')].sort(
+            (a,b)=>new Date(a.dataset.date)-new Date(b.dataset.date)
+        );
+        cbs.forEach((cb,i)=>{
+            if(cb.dataset.system==="1") cb.checked=false;
+            else cb.checked=i!==0;
+        });
+    });
+    updateSelectionCount();
+    alert("Smart Selection Complete");
+}
+
+function toggleMediaOnly() {
+    mediaOnlyMode = !mediaOnlyMode;
+
+    document.querySelectorAll('.file-row').forEach(row => {
+        const isMedia = row.dataset.media === "1";
+        const thumb = row.querySelector('.thumb');
+
+        if (mediaOnlyMode) {
+            row.style.display = isMedia ? '' : 'none';
+            if (thumb) thumb.style.display = 'block';
+        } else {
+            row.style.display = '';
+            if (thumb) thumb.style.display = 'none';
+        }
+    });
+
+    document.getElementById('toggleMediaBtn').innerText =
+        mediaOnlyMode ? '📁 Show All Files' : '🖼️ Show Media Only';
+
+    deselectAll();
 }
 
 
-
-
 </script>
+
 </body>
 </html>
