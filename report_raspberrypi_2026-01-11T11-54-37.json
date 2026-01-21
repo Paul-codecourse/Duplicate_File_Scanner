@@ -90,13 +90,6 @@
         }
       ]
     },
-        {
-      "name": "photo.jpg",
-      "path": "/home/pi/photos/photo.jpg",
-      "size": 204800,
-      "created": "2026-01-11T10:00:00.000Z"
-    }
-    ,
     {
       "hash": "f6994894a975f34178b43db4062cece1",
       "size": 7,

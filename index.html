@@ -60,7 +60,7 @@
     </div>
 
     <!-- Action Bar -->
-    <div id="actionBar" class="sticky-top bg-white border-bottom py-2 mb-3" style="display:none; z-index:1020;"><h1>Action Bar</h1>
+    <div id="actionBar" class="sticky-top bg-white border-bottom py-2 mb-3" style="z-index:1020;"><h1>Action Bar</h1>
         <div class="container d-flex justify-content-between align-items-center">
             <div>
                 <span id="selectedCount" class="badge bg-primary">0</span>
@@ -115,6 +115,7 @@ function isMediaFile(path) {
     return IMAGE_EXTENSIONS.includes(ext) || VIDEO_EXTENSIONS.includes(ext);
 }
 
+
 function isImageFile(path) {
     return IMAGE_EXTENSIONS.includes(getExtension(path));
 }
@@ -166,11 +167,13 @@ function render(data) {
                                 ${sys?' <span class="badge bg-secondary">system</span>':''}
 
                                 <div class="thumb mt-1" style="display:none;">
-                                    ${isImageFile(f.path)
-                                        ? `<img src="file://${f.path}" 
-                                                style="max-height:80px; max-width:120px; border-radius:4px;">`
-                                        : `<span class="badge bg-dark">video</span>`
-                                    }
+                                   ${isImageFile(f.path)
+                                    ? `<img src="file://${f.path}"
+                                            style="max-height:80px; max-width:120px; border-radius:4px;">`
+                                    : (VIDEO_EXTENSIONS.includes(getExtension(f.path))
+                                        ? `<span class="badge bg-dark">video</span>`
+                                        : ``)
+                                }
                                 </div>
                             </div>
                         </div>`;
@@ -189,8 +192,10 @@ function updateSelectionCount() {
     const c = document.querySelectorAll('.file-check:checked').length;
     document.getElementById('selectedCount').innerText = c;
 
-    document.getElementById('actionBar').style.display =
-        (c || mediaOnlyMode) ? 'block' : 'none';
+    document.querySelectorAll('#actionBar button').forEach(btn => {
+        btn.disabled = c === 0;
+    });
+
 }
 
 function deselectAll() {
