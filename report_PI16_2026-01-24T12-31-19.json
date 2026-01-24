@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "hostname": "PI16",
+    "scanDate": "2026-01-24T12:31:19.719Z",
+    "targetPaths": [
+      "."
+    ],
+    "durationSeconds": "0.06"
+  },
+  "summary": {
+    "totalFilesScanned": 73,
+    "duplicateSets": 3,
+    "totalDuplicateFiles": 8,
+    "potentialSavingsBytes": 171
+  },
+  "sets": [
+    {
+      "hash": "cde81afc1bf00a46f4bae83ad15ec47f",
+      "size": 41,
+      "fileCount": 4,
+      "files": [
+        {
+          "name": "ORIG_HEAD",
+          "path": ".git/ORIG_HEAD",
+          "size": 41,
+          "created": "2026-01-19T22:12:47.267Z"
+        },
+        {
+          "name": "main",
+          "path": ".git/refs/heads/main",
+          "size": 41,
+          "created": "2026-01-17T23:08:13.603Z"
+        },
+        {
+          "name": "main",
+          "path": ".git/refs/remotes/origin/main",
+          "size": 41,
+          "created": "2026-01-17T23:08:25.874Z"
+        },
+        {
+          "name": "Duplicate_File_Scanner_v0.20",
+          "path": ".git/refs/tags/Duplicate_File_Scanner_v0.20",
+          "size": 41,
+          "created": "2026-01-19T22:12:47.055Z"
+        }
+      ]
+    },
+    {
+      "hash": "64466474701a3efac2d04f6091676936",
+      "size": 41,
+      "fileCount": 2,
+      "files": [
+        {
+          "name": "21_updated_Readme_file",
+          "path": ".git/refs/heads/21_updated_Readme_file",
+          "size": 41,
+          "created": "2026-01-21T20:54:24.769Z"
+        },
+        {
+          "name": "21_updated_Readme_file",
+          "path": ".git/refs/remotes/origin/21_updated_Readme_file",
+          "size": 41,
+          "created": "2026-01-21T20:54:33.993Z"
+        }
+      ]
+    },
+    {
+      "hash": "f6994894a975f34178b43db4062cece1",
+      "size": 7,
+      "fileCount": 2,
+      "files": [
+        {
+          "name": "Test File 1 Duplicate.txt",
+          "path": "Test File 1 Duplicate.txt",
+          "size": 7,
+          "created": "2026-01-15T22:48:45.354Z"
+        },
+        {
+          "name": "Test File 2 Duplicate.txt",
+          "path": "Test File 2 Duplicate.txt",
+          "size": 7,
+          "created": "2026-01-15T22:48:45.354Z"
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

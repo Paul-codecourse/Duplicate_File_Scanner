@@ -5,15 +5,15 @@
     <title>File Audit Dashboard</title>
     <link rel="stylesheet" href="assets/bootstrap.min.css">
     <style>
-        body { background-color: #f8f9fa; padding-top: 110px; padding-bottom: 90px;}
+        body { background-color: #f8f9fa; padding-top: 110px; padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)); } 
         .stat-card { border-radius: 10px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .file-list { font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; background: #eee; padding: 8px; border-radius: 5px; }
         .set-header { cursor: pointer; transition: background 0.2s; }
         .set-header:hover { background-color: #f1f1f1 !important; }
-        .sticky-top { backdrop-filter: blur(6px); background-color: rgba(248,249,250,0.95); }
-        .action-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255, 255, 255, 0.96); border-top: 1px solid #dee2e6; padding: 10px 0; z-index: 1050;    backdrop-filter: blur(6px);  transition: transform 0.25s ease-in-out;}
-        .action-bar.hidden { transform: translateY(100%); }
-
+        .sticky-top { backdrop-filter: blur(6px); background-color: rgba(248,249,250,0.95); padding-top: calc(15px + env(safe-area-inset-top, 0px));}
+        .action-bar { position: fixed; bottom: 0; left: 0; right: 0; padding: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding-left: calc(10px + env(safe-area-inset-left, 0px)); padding-right: calc(10px + env(safe-area-inset-right, 0px)); width: 100%; height: 72px;     background: rgba(255, 255, 255, 0.96); border-top: 1px solid #dee2e6; padding: 10px 0; z-index: 1050;    backdrop-filter: blur(6px); box-shadow: 0 -4px 10px rgba(0,0,0,0.08); display: flex; align-items: center;}
+        /* .action-bar.hidden { transform: translateY(100%); } */
+        
 </style>
 </head>
 <body>
@@ -48,7 +48,7 @@
             </li>
         </ul>
     </div>
-
+</div>
 
 <div class="container py-4">
     <div id="content" style="display:none;">
@@ -61,24 +61,7 @@
         <div class="col-md-3"><div class="card stat-card p-3"><h6>Scan Time</h6><h4 id="stat-time">-</h4></div></div>
     </div>
 
-    <!-- Action Bar -->
-<div id="actionBar" class="action-bar shadow-lg">
-    <div class="container d-flex justify-content-between align-items-center">
-        <div>
-            <span id="selectedCount" class="badge bg-primary">0</span>
-            <span class="text-muted ms-2">files selected</span>
-        </div>
-        <div class="d-flex flex-wrap gap-2">
-            <button class="btn btn-sm btn-outline-warning" id="toggleSystemBtn" onclick="toggleSystemFiles()">🚫 Exclude System Files</button>
-            <button class="btn btn-sm btn-outline-primary" onclick="smartSelect()">🪄 Smart Select</button>
-            <button class="btn btn-sm btn-outline-danger" onclick="deselectAll()">Deselect</button>
-            <button class="btn btn-sm btn-outline-success" id="toggleMediaBtn" onclick="toggleMediaOnly()">🖼️ Show Media Only</button>
-            <button class="btn btn-sm btn-primary" onclick="copySelectedPaths()">📋 Copy Paths</button>
-        </div>
-    </div>
-</div>
-
-    <!-- Tabs -->
+        <!-- Tabs -->
     <div class="tab-content">
         <div class="tab-pane fade show active" id="tab-dupes">
             <div id="dupe-list"></div>
@@ -93,6 +76,23 @@
     </div>
 
 </div>
+</div>
+
+<!-- Action Bar -->
+<div id="actionBar" class="action-bar shadow-lg">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div>
+            <span id="selectedCount" class="badge bg-primary">0</span>
+            <span class="text-muted ms-2">files selected</span>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-sm btn-outline-warning" id="toggleSystemBtn" onclick="toggleSystemFiles()">🚫 Exclude System Files</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="smartSelect()">🪄 Smart Select</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deselectAll()">Deselect</button>
+            <button class="btn btn-sm btn-outline-success" id="toggleMediaBtn" onclick="toggleMediaOnly()">🖼️ Show Media Only</button>
+            <button class="btn btn-sm btn-primary" onclick="copySelectedPaths()">📋 Copy Paths</button>
+        </div>
+    </div>
 </div>
 
 <script src="assets/bootstrap.bundle.min.js"></script>
@@ -141,8 +141,10 @@ function render(data) {
     document.getElementById('stat-files').innerText = data.summary.totalFilesScanned;
     document.getElementById('stat-time').innerText = data.metadata.durationSeconds + "s";
 
-    document.getElementById('dupe-list').innerHTML = data.sets.map((set,i)=>`
-        <div class="card mb-2 dupe-set">
+    document.getElementById('dupe-list').innerHTML = data.sets.map((set,i)=>{
+    const hasMedia = set.files.some(f => isMediaFile(f.path));
+    return `
+            <div class="card mb-2 dupe-set" data-has-media="${hasMedia ? '1' : '0'}">
             <div class="card-header set-header" data-bs-toggle="collapse" data-bs-target="#set-${i}">
                 <strong>${set.files[0].name}</strong> (${(set.size/1024).toFixed(1)} KB)
                 <span class="badge bg-secondary float-end">${set.fileCount}</span>
@@ -181,7 +183,7 @@ function render(data) {
                 </div>
             </div>
         </div>
-    `).join('');
+    `}).join('');
 
     document.getElementById('error-list').innerHTML =
         data.errors.map(e=>`<tr><td>${e.path}</td><td>${e.reason}</td></tr>`).join('');
@@ -192,10 +194,11 @@ function updateSelectionCount() {
     document.getElementById('selectedCount').innerText = c;
 
     document.querySelectorAll('#actionBar button').forEach(btn => {
+        if (btn.id === 'toggleMediaBtn') return; // 👈 allow toggle always
         btn.disabled = c === 0;
     });
-
 }
+
 
 function deselectAll() {
     document.querySelectorAll('.file-check').forEach(cb=>cb.checked=false);
@@ -234,50 +237,41 @@ function smartSelect() {
 }
 
 function toggleMediaOnly() {
+    const sets = document.querySelectorAll('.dupe-set');
+    const anyMedia = document.querySelector('.dupe-set[data-has-media="1"]');
+
     mediaOnlyMode = !mediaOnlyMode;
 
-    document.querySelectorAll('.file-row').forEach(row => {
-        const isMedia = row.dataset.media === "1";
-        const thumb = row.querySelector('.thumb');
+    if (mediaOnlyMode && !anyMedia) {
+        alert('No media files found in this scan.');
 
-        if (mediaOnlyMode) {
-            row.style.display = isMedia ? '' : 'none';
-            if (thumb) thumb.style.display = 'block';
-        } else {
-            row.style.display = '';
-            if (thumb) thumb.style.display = 'none';
-        }
+        sets.forEach(set => {
+            set.style.display = 'none';
+        });
+
+        document.getElementById('toggleMediaBtn').innerText = '📁 Show All Files';
+        return;
+    }
+
+    sets.forEach(set => {
+        const hasMedia = set.dataset.hasMedia === '1';
+        set.style.display = mediaOnlyMode && !hasMedia ? 'none' : '';
+        // 👇 control thumbnails inside this set
+        set.querySelectorAll('.file-row').forEach(row => {
+            const thumb = row.querySelector('.thumb');
+            if (!thumb) return;
+
+            if (mediaOnlyMode && row.dataset.media === '1') {
+                thumb.style.display = 'block';
+            } else {
+                thumb.style.display = 'none';
+            }
+        });
     });
 
     document.getElementById('toggleMediaBtn').innerText =
         mediaOnlyMode ? '📁 Show All Files' : '🖼️ Show Media Only';
-
-    deselectAll();
 }
-
-
-</script>
-
-<script>
-let lastScrollY = window.scrollY;
-const actionBar = document.getElementById('actionBar');
-
-window.addEventListener('scroll', () => {
-    const currentScrollY = window.scrollY;
-
-    // Ignore tiny scroll jitter
-    if (Math.abs(currentScrollY - lastScrollY) < 10) return;
-
-    if (currentScrollY > lastScrollY) {
-        // scrolling down → hide
-        actionBar.classList.add('hidden');
-    } else {
-        // scrolling up → show
-        actionBar.classList.remove('hidden');
-    }
-
-    lastScrollY = currentScrollY;
-});
 </script>
 
 </body>
